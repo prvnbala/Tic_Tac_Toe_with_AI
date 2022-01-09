@@ -6,8 +6,7 @@ import tictactoe.models.Board;
 import tictactoe.models.Game;
 import tictactoe.models.players.BotPlayer;
 import tictactoe.models.players.HumanPlayer;
-import tictactoe.models.players.Player;
-import tictactoe.strategies.playing_strategy.EasyRandomMoveStrategy;
+import tictactoe.strategies.playing_strategy.EasyDifficultyStrategy;
 
 import java.util.*;
 
@@ -49,7 +48,7 @@ public class Main {
                     if ("user".equals(playerType)) {
                         game.addPlayer(new HumanPlayer(symbols.poll()));
                     } else if ("easy".equals(playerType)) {
-                        game.addPlayer(new BotPlayer(symbols.poll(), new EasyRandomMoveStrategy()));
+                        game.addPlayer(new BotPlayer(symbols.poll(), new EasyDifficultyStrategy()));
                     } else {
                         throw new BadParametersException();
                     }

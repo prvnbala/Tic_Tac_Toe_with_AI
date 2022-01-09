@@ -4,7 +4,7 @@ import tictactoe.models.Board;
 
 import java.util.Random;
 
-public class EasyRandomMoveStrategy implements PlayingStrategy {
+public class EasyDifficultyStrategy implements PlayingStrategy {
     @Override
     public int[] findNextMove(Board board) {
         int n = board.getSize();

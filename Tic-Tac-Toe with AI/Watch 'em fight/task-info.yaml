@@ -400,7 +400,7 @@ files:
         }
     }
   learner_created: true
-- name: src/tictactoe/strategies/playing_strategy/EasyRandomMoveStrategy.java
+- name: src/tictactoe/strategies/playing_strategy/EasyDifficultyStrategy.java
   visible: true
   text: |
     package tictactoe.strategies.playing_strategy;
@@ -685,4 +685,4 @@ status: Solved
 feedback:
   message: Congratulations!
   time: Sat, 08 Jan 2022 11:53:16 UTC
-record: -1
+record: 3

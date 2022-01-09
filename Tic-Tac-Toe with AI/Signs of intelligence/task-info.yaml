@@ -365,6 +365,412 @@ files:
         }
     }
   learner_created: false
+- name: src/tictactoe/controllers/GameController.java
+  visible: true
+  text: |
+    package tictactoe.controllers;
+
+    import tictactoe.models.Game;
+    import tictactoe.models.GameStatus;
+    import tictactoe.models.players.Player;
+
+    import java.util.ArrayList;
+    import java.util.Arrays;
+    import java.util.LinkedList;
+    import java.util.Queue;
+
+    public class GameController {
+        Game game;
+        Queue<Player> playerQueue = new LinkedList<>();
+
+        public GameController(Game game) {
+            this.game = game;
+
+            for (Player x : game.getPlayerList()) {
+                playerQueue.offer(x);
+            }
+        }
+
+        public void startGame() {
+            while (game.getGameStatus() == GameStatus.IN_PROGRESS) {
+                Player currentPlayer = playerQueue.poll();
+                game.getBoard().printBoard();
+                int[] lastMove = currentPlayer.makeMove(game.getBoard());
+                playerQueue.offer(currentPlayer);
+
+                game.updateGameStatus(lastMove);
+
+                if (game.getGameStatus() == GameStatus.WIN) {
+                    game.getBoard().printBoard();
+                    System.out.println(currentPlayer.getSymbol() + " wins");
+                    break;
+                }
+
+                if (game.getGameStatus() == GameStatus.DRAW) {
+                    game.getBoard().printBoard();
+                    System.out.println("Draw");
+                }
+            }
+        }
+
+    }
+  learner_created: true
+- name: src/tictactoe/models/GameStatus.java
+  visible: true
+  text: |
+    package tictactoe.models;
+
+    public enum GameStatus {
+        WIN,
+        DRAW,
+        IN_PROGRESS
+    }
+  learner_created: true
+- name: src/tictactoe/models/players/HumanPlayer.java
+  visible: true
+  text: |
+    package tictactoe.models.players;
+
+    import tictactoe.exceptions.CellOccupiedException;
+    import tictactoe.models.Board;
+
+    import java.util.Scanner;
+
+    public class HumanPlayer implements Player {
+        private String name;
+        private Character symbol;
+
+        public HumanPlayer(Character symbol) {
+            this.symbol = symbol;
+        }
+
+        @Override
+        public int[] makeMove(Board board) {
+            Scanner scanner = new Scanner(System.in);
+            int n = board.getSize();
+            int[] lastMove = new int[2];
+            boolean receviedInput = false;
+            while (!receviedInput) {
+                System.out.print("Enter the coordinates: ");
+                try {
+                    String input = scanner.nextLine();
+                    String[] inps = input.split(" ");
+                    int row = Integer.parseInt(inps[0]);
+                    int col = Integer.parseInt(inps[1]);
+
+                    if (board.getGrid().get(row - 1).get(col - 1) != '_') {
+                        throw new CellOccupiedException();
+                    }
+
+                    board.getGrid().get(row - 1).set(col - 1, this.symbol);
+                    lastMove[0] = row;
+                    lastMove[1] = col;
+                    receviedInput = true;
+
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println("Invalid range. Try again");
+                } catch (CellOccupiedException e) {
+                    System.out.println("Cell already occupied. Try again");
+                } catch (NumberFormatException e) {
+                    //
+                }
+            }
+            return lastMove;
+        }
+
+        public Character getSymbol() {
+            return symbol;
+        }
+    }
+  learner_created: true
+- name: src/tictactoe/exceptions/CellOccupiedException.java
+  visible: true
+  text: |
+    package tictactoe.exceptions;
+
+    public class CellOccupiedException extends Throwable {
+    }
+  learner_created: true
+- name: src/tictactoe/models/Board.java
+  visible: true
+  text: |
+    package tictactoe.models;
+
+    import java.util.ArrayList;
+    import java.util.List;
+
+    public class Board {
+        int size;
+        List<List<Character>> grid = new ArrayList<>();
+
+        public Board(int size) {
+            this.size = size;
+            buildEmptyGrid(size);
+        }
+
+        private void buildEmptyGrid(int size) {
+            for (int i = 0; i < size; i++) {
+                grid.add(new ArrayList<>());
+                for (int j = 0; j < size; j++) {
+                    grid.get(i).add('_');
+                }
+            }
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public void setSize(int size) {
+            this.size = size;
+        }
+
+        public List<List<Character>> getGrid() {
+            return grid;
+        }
+
+        public void printBoard() {
+            System.out.println("---------");
+            for (int i = 0; i < size; i++) {
+                System.out.print("| ");
+                for (int j = 0; j < size; j++) {
+                    System.out.print(grid.get(i).get(j) + " ");
+                }
+                System.out.print("|");
+                System.out.println();
+            }
+            System.out.println("---------");
+        }
+
+    }
+  learner_created: true
+- name: src/tictactoe/strategies/playing_strategy/PlayingStrategy.java
+  visible: true
+  text: |
+    package tictactoe.strategies.playing_strategy;
+
+    import tictactoe.models.Board;
+
+    public interface PlayingStrategy {
+        public int[] findNextMove(Board board);
+    }
+  learner_created: true
+- name: src/tictactoe/models/Game.java
+  visible: true
+  text: |
+    package tictactoe.models;
+
+    import tictactoe.models.players.Player;
+    import tictactoe.strategies.winning_strategy.DefaultWinningStrategy;
+    import tictactoe.strategies.winning_strategy.WinningStrategy;
+
+    import java.util.ArrayList;
+    import java.util.List;
+
+    public class Game {
+        Board board;
+        List<Player> playerList = new ArrayList<>();
+        WinningStrategy winningStrategy;
+        GameStatus gameStatus;
+
+        public Game() {
+            this.winningStrategy = new DefaultWinningStrategy();
+            this.gameStatus = GameStatus.IN_PROGRESS;
+        }
+
+        public void addPlayer(Player player) {
+            playerList.add(player);
+        }
+
+        public void setBoard(Board board) {
+            this.board = board;
+        }
+
+        public void setWinningStrategy(WinningStrategy winningStrategy) {
+            this.winningStrategy = winningStrategy;
+        }
+
+        public void setGameStatus(GameStatus gameStatus) {
+            this.gameStatus = gameStatus;
+        }
+
+        public List<Player> getPlayerList() {
+            return playerList;
+        }
+
+        public Board getBoard() {
+            return board;
+        }
+
+        public GameStatus getGameStatus() {
+            return gameStatus;
+        }
+
+        public void updateGameStatus(int[] lastMove) {
+            gameStatus = winningStrategy.checkWin(board, lastMove);
+        }
+    }
+  learner_created: true
+- name: src/tictactoe/exceptions/BadParametersException.java
+  visible: true
+  text: |
+    package tictactoe.exceptions;
+
+    public class BadParametersException extends Throwable {
+    }
+  learner_created: true
+- name: src/tictactoe/strategies/winning_strategy/DefaultWinningStrategy.java
+  visible: true
+  text: |
+    package tictactoe.strategies.winning_strategy;
+
+    import tictactoe.models.Board;
+    import tictactoe.models.GameStatus;
+
+    public class DefaultWinningStrategy implements WinningStrategy {
+        @Override
+        public GameStatus checkWin(Board board, int[] lastMove) {
+
+            char currentChar = board.getGrid().get(lastMove[0] - 1).get(lastMove[1] - 1);
+            boolean rowWin = true;
+            for (int i = 0; i < board.getSize(); i++) {
+                if (board.getGrid().get(lastMove[0] - 1).get(i) != currentChar) {
+                    rowWin = false;
+                }
+            }
+
+            boolean colWin = true;
+            for (int i = 0; i < board.getSize(); i++) {
+                if (board.getGrid().get(i).get(lastMove[1] - 1) != currentChar) {
+                    colWin = false;
+                }
+            }
+
+            boolean diag1Win = true;
+            for (int i = 0; i < board.getSize(); i++) {
+                if (board.getGrid().get(i).get(i) != currentChar) {
+                    diag1Win = false;
+                }
+            }
+
+            boolean diag2Win = true;
+            for (int i = board.getSize() - 1; i >= 0 ; i--) {
+                if (board.getGrid().get(i).get(i) != currentChar) {
+                    diag2Win = false;
+                }
+            }
+
+            if (rowWin || colWin || diag1Win || diag2Win) {
+                return GameStatus.WIN;
+            } else {
+                int emptyCount = 0;
+                for (int i = 0; i < board.getSize(); i++) {
+                    for (int j = 0; j < board.getSize(); j++) {
+                        if (board.getGrid().get(i).get(j) == '_') {
+                            emptyCount++;
+                        }
+                    }
+                }
+
+                if (emptyCount == 0) {
+                    return GameStatus.DRAW;
+                }
+            }
+
+            return GameStatus.IN_PROGRESS;
+        }
+    }
+  learner_created: true
+- name: src/tictactoe/strategies/winning_strategy/WinningStrategy.java
+  visible: true
+  text: |
+    package tictactoe.strategies.winning_strategy;
+
+    import tictactoe.models.Board;
+    import tictactoe.models.Game;
+    import tictactoe.models.GameStatus;
+
+    public interface WinningStrategy {
+        public GameStatus checkWin(Board board, int[] lastMove);
+    }
+  learner_created: true
+- name: src/tictactoe/models/players/Player.java
+  visible: true
+  text: |
+    package tictactoe.models.players;
+
+    import tictactoe.models.Board;
+
+    public interface Player {
+        public int[] makeMove(Board board);
+        public Character getSymbol();
+    }
+  learner_created: true
+- name: src/tictactoe/models/players/BotPlayer.java
+  visible: true
+  text: |
+    package tictactoe.models.players;
+
+    import tictactoe.models.Board;
+    import tictactoe.strategies.playing_strategy.PlayingStrategy;
+
+    public class BotPlayer implements Player{
+        private Character symbol;
+        private PlayingStrategy playingStrategy;
+
+        public BotPlayer(Character symbol, PlayingStrategy playingStrategy) {
+            this.symbol = symbol;
+            this.playingStrategy = playingStrategy;
+        }
+
+        @Override
+        public int[] makeMove(Board board) {
+            int[] movePoint = playingStrategy.findNextMove(board);
+
+            board.getGrid().get(movePoint[0] - 1).set(movePoint[1] - 1, symbol);
+            return movePoint;
+        }
+
+        public Character getSymbol() {
+            return symbol;
+        }
+    }
+  learner_created: true
+- name: src/tictactoe/strategies/playing_strategy/EasyDifficultyStrategy.java
+  visible: true
+  text: |
+    package tictactoe.strategies.playing_strategy;
+
+    import tictactoe.models.Board;
+
+    import java.util.Random;
+
+    public class EasyRandomMoveStrategy implements PlayingStrategy {
+        @Override
+        public int[] findNextMove(Board board) {
+            int n = board.getSize();
+            boolean foundMove = false;
+            int[] movePoint = new int[2];
+            Random random = new Random();
+            while (!foundMove) {
+                int row = random.nextInt(3);
+                int col = random.nextInt(3);
+
+                if (board.getGrid().get(row).get(col) == '_') {
+                    movePoint[0] = row + 1;
+                    movePoint[1] = col + 1;
+                    foundMove = true;
+                    System.out.println("Making move level \"easy\"");
+                }
+            }
+
+            return movePoint;
+        }
+    }
+  learner_created: true
+- name: src/tictactoe/strategies/playing_strategy/MediumDifficultyStrategy.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/81/stages/450/implement#comment
 status: Unchecked
 record: -1
